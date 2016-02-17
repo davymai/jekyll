@@ -1,13 +1,25 @@
 require 'helper'
 
-class TestRdiscount < Test::Unit::TestCase
+class TestRdiscount < JekyllUnitTest
 
   context "rdiscount" do
     setup do
+      if jruby?
+        then skip(
+          "JRuby does not perform well with CExt, test disabled."
+        )
+      end
+
       config = {
         'markdown' => 'rdiscount',
-        'rdiscount' => { 'extensions' => ['smart', 'generate_toc'], 'toc_token' => '{:toc}' }
+        'rdiscount' => {
+          'toc_token' => '{:toc}',
+          'extensions' => [
+            'smart', 'generate_toc'
+          ],
+        }
       }
+
       @markdown = Converters::Markdown.new config
     end
 

@@ -1,6 +1,6 @@
 require 'helper'
 
-class TestLogAdapter < Test::Unit::TestCase
+class TestLogAdapter < JekyllUnitTest
   class LoggerDouble
     attr_accessor :level
 
@@ -18,11 +18,47 @@ class TestLogAdapter < Test::Unit::TestCase
     end
   end
 
+  context "#adjust_verbosity" do
+    should "set the writers logging level to error when quiet" do
+      subject = Jekyll::LogAdapter.new(LoggerDouble.new)
+      subject.adjust_verbosity(:quiet => true)
+      assert_equal Jekyll::LogAdapter::LOG_LEVELS[:error], subject.writer.level
+    end
+
+    should "set the writers logging level to debug when verbose" do
+      subject = Jekyll::LogAdapter.new(LoggerDouble.new)
+      subject.adjust_verbosity(:verbose => true)
+      assert_equal Jekyll::LogAdapter::LOG_LEVELS[:debug], subject.writer.level
+    end
+
+    should "set the writers logging level to error when quiet and verbose are both set" do
+      subject = Jekyll::LogAdapter.new(LoggerDouble.new)
+      subject.adjust_verbosity(:quiet => true, :verbose => true)
+      assert_equal Jekyll::LogAdapter::LOG_LEVELS[:error], subject.writer.level
+    end
+
+    should "not change the writer's logging level when neither verbose or quiet" do
+      subject = Jekyll::LogAdapter.new(LoggerDouble.new)
+      original_level = subject.writer.level
+      refute_equal Jekyll::LogAdapter::LOG_LEVELS[:error], subject.writer.level
+      refute_equal Jekyll::LogAdapter::LOG_LEVELS[:debug], subject.writer.level
+      subject.adjust_verbosity(:quiet => false, :verbose => false)
+      assert_equal original_level, subject.writer.level
+    end
+
+    should "call #debug on writer return true" do
+      writer = LoggerDouble.new
+      logger = Jekyll::LogAdapter.new(writer)
+      allow(writer).to receive(:debug).and_return(true)
+      assert logger.adjust_verbosity
+    end
+  end
+
   context "#debug" do
     should "call #debug on writer return true" do
       writer = LoggerDouble.new
       logger = Jekyll::LogAdapter.new(writer)
-      stub(writer).debug('topic '.rjust(20) + 'log message') { true }
+      allow(writer).to receive(:debug).with('topic '.rjust(20) + 'log message').and_return(true)
       assert logger.debug('topic', 'log message')
     end
   end
@@ -31,7 +67,7 @@ class TestLogAdapter < Test::Unit::TestCase
     should "call #info on writer return true" do
       writer = LoggerDouble.new
       logger = Jekyll::LogAdapter.new(writer)
-      stub(writer).info('topic '.rjust(20) + 'log message') { true }
+      allow(writer).to receive(:info).with('topic '.rjust(20) + 'log message').and_return(true)
       assert logger.info('topic', 'log message')
     end
   end
@@ -40,7 +76,7 @@ class TestLogAdapter < Test::Unit::TestCase
     should "call #warn on writer return true" do
       writer = LoggerDouble.new
       logger = Jekyll::LogAdapter.new(writer)
-      stub(writer).warn('topic '.rjust(20) + 'log message') { true }
+      allow(writer).to receive(:warn).with('topic '.rjust(20) + 'log message').and_return(true)
       assert logger.warn('topic', 'log message')
     end
   end
@@ -49,7 +85,7 @@ class TestLogAdapter < Test::Unit::TestCase
     should "call #error on writer return true" do
       writer = LoggerDouble.new
       logger = Jekyll::LogAdapter.new(writer)
-      stub(writer).error('topic '.rjust(20) + 'log message') { true }
+      allow(writer).to receive(:error).with('topic '.rjust(20) + 'log message').and_return(true)
       assert logger.error('topic', 'log message')
     end
   end
@@ -57,8 +93,8 @@ class TestLogAdapter < Test::Unit::TestCase
   context "#abort_with" do
     should "call #error and abort" do
       logger = Jekyll::LogAdapter.new(LoggerDouble.new)
-      stub(logger).error('topic', 'log message') { true }
-      assert_raise(SystemExit) { logger.abort_with('topic', 'log message') }
+      allow(logger).to receive(:error).with('topic', 'log message').and_return(true)
+      assert_raises(SystemExit) { logger.abort_with('topic', 'log message') }
     end
   end
 

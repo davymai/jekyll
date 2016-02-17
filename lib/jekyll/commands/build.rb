@@ -1,9 +1,7 @@
 module Jekyll
   module Commands
     class Build < Command
-
       class << self
-
         # Create the Mercenary command for the Jekyll CLI for this Command
         def init_with_program(prog)
           prog.command(:build) do |c|
@@ -13,7 +11,7 @@ module Jekyll
 
             add_build_options(c)
 
-            c.action do |args, options|
+            c.action do |_, options|
               options["serving"] = false
               Jekyll::Commands::Build.process(options)
             end
@@ -23,7 +21,8 @@ module Jekyll
         # Build your jekyll site
         # Continuously watch if `watch` is set to true in the config.
         def process(options)
-          Jekyll.logger.log_level = :error if options['quiet']
+          # Adjust verbosity quickly
+          Jekyll.logger.adjust_verbosity(options)
 
           options = configuration_from_options(options)
           site = Jekyll::Site.new(options)
@@ -34,7 +33,9 @@ module Jekyll
             build(site, options)
           end
 
-          if options.fetch('watch', false)
+          if options.fetch('detach', false)
+            Jekyll.logger.info "Auto-regeneration:", "disabled when running server detached."
+          elsif options.fetch('watch', false)
             watch(site, options)
           else
             Jekyll.logger.info "Auto-regeneration:", "disabled. Use --watch to enable."
@@ -51,13 +52,13 @@ module Jekyll
           t = Time.now
           source      = options['source']
           destination = options['destination']
-          full_build  = options['full_rebuild']
+          incremental = options['incremental']
           Jekyll.logger.info "Source:", source
           Jekyll.logger.info "Destination:", destination
-          Jekyll.logger.info "Incremental build:", (full_build ? "disabled" : "enabled")
+          Jekyll.logger.info "Incremental build:", (incremental ? "enabled" : "disabled. Enable with --incremental")
           Jekyll.logger.info "Generating..."
           process_site(site)
-          Jekyll.logger.info "", "done in #{Time.now - t} seconds."
+          Jekyll.logger.info "", "done in #{(Time.now - t).round(3)} seconds."
         end
 
         # Private: Watch for file changes and rebuild the site.
@@ -66,13 +67,11 @@ module Jekyll
         # options - A Hash of options passed to the command
         #
         # Returns nothing.
-        def watch(site, options)
+        def watch(_site, options)
           External.require_with_graceful_fail 'jekyll-watch'
           Jekyll::Watcher.watch(options)
         end
-
       end # end of class << self
-
     end
   end
 end

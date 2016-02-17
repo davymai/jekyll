@@ -1,6 +1,5 @@
 markdown: kramdown
 highlighter: pygments
-relative_permalinks: false
 permalink: /news/:year/:month/:day/:title/
 excerpt_separator: ""
 
@@ -10,6 +9,17 @@ google_analytics_id: UA-50755011-1
 repository: https://github.com/jekyll/jekyll
 help_url: https://github.com/jekyll/jekyll-help
 
+timezone: America/Los_Angeles
+
 collections:
   docs:
     output: true
+
+name: Jekyll • Simple, blog-aware, static sites
+description: Transform your plain text into static websites and blogs
+url: http://jekyllrb.com
+
+gems:
+  - jekyll-feed
+  - jekyll-redirect-from
+  - jemoji

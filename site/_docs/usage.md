@@ -22,17 +22,29 @@ $ jekyll build --watch
 #    watched for changes, and regenerated automatically.
 {% endhighlight %}
 
+<div class="note info">
+  <h5>Changes to _config.yml are not included during automatic regeneration.</h5>
+  <p>
+    The <code>_config.yml</code> master configuration file contains global configurations
+    and variable definitions that are read once at execution time. Changes made to <code>_config.yml</code>
+    during automatic regeneration are not loaded until the next execution.
+  </p>
+  <p>
+    Note <a href="../datafiles">Data Files</a> are included and reloaded during automatic regeneration.
+  </p>
+</div>
+
 <div class="note warning">
   <h5>Destination folders are cleaned on site builds</h5>
   <p>
     The contents of <code>&lt;destination&gt;</code> are automatically
     cleaned, by default, when the site is built. Files or folders that are not
-    created by your site will be removed. Files and folders you wish to retain 
-    in <code>&lt;destination&gt;</code> may be specified within the <code>&lt;keep_files&gt;</code> 
+    created by your site will be removed. Files and folders you wish to retain
+    in <code>&lt;destination&gt;</code> may be specified within the <code>&lt;keep_files&gt;</code>
     configuration directive.
   </p>
   <p>
-    Do not use an important location for <code>&lt;destination&gt;</code>; 
+    Do not use an important location for <code>&lt;destination&gt;</code>;
     instead, use it as a staging area and copy files from there to your web server.
   </p>
 </div>

@@ -1,7 +1,7 @@
 require 'helper'
 require 'jekyll/commands/new'
 
-class TestNewCommand < Test::Unit::TestCase
+class TestNewCommand < JekyllUnitTest
   def dir_contents(path)
     Dir["#{path}/**/*"].each do |file|
       file.gsub! path, ''
@@ -24,15 +24,16 @@ class TestNewCommand < Test::Unit::TestCase
     end
 
     should 'create a new directory' do
-      assert !File.exist?(@full_path)
-      capture_stdout { Jekyll::Commands::New.process(@args) }
-      assert File.exist?(@full_path)
+      refute_exist @full_path
+      Jekyll::Commands::New.process(@args)
+      assert_exist @full_path
     end
 
     should 'display a success message' do
-      output = capture_stdout { Jekyll::Commands::New.process(@args) }
-      success_message = "New jekyll site installed in #{@full_path}. \n"
-      assert_equal success_message, output
+      Jekyll::Commands::New.process(@args)
+      output = Jekyll.logger.messages.last
+      success_message = "New jekyll site installed in #{@full_path}."
+      assert_includes output, success_message
     end
 
     should 'copy the static files in site template to the new directory' do
@@ -55,7 +56,7 @@ class TestNewCommand < Test::Unit::TestCase
       end
 
       stubbed_date = '2013-01-01'
-      stub.instance_of(Time).strftime { stubbed_date }
+      allow_any_instance_of(Time).to receive(:strftime) { stubbed_date }
 
       erb_template_files.each do |f|
         f.chomp! '.erb'
@@ -79,9 +80,8 @@ class TestNewCommand < Test::Unit::TestCase
 
     should 'force created folder' do
       capture_stdout { Jekyll::Commands::New.process(@args) }
-      assert_nothing_raised(SystemExit) do
-        capture_stdout {Jekyll::Commands::New.process(@args, '--force') }
-      end
+      output = capture_stdout { Jekyll::Commands::New.process(@args, '--force') }
+      assert_match /New jekyll site installed in/, output
     end
   end
 
@@ -96,9 +96,9 @@ class TestNewCommand < Test::Unit::TestCase
     end
 
     should 'create a new directory' do
-      assert !File.exist?(@site_name_with_spaces)
+      refute_exist @site_name_with_spaces
       capture_stdout { Jekyll::Commands::New.process(@multiple_args) }
-      assert File.exist?(@site_name_with_spaces)
+      assert_exist @site_name_with_spaces
     end
   end
 
@@ -108,7 +108,7 @@ class TestNewCommand < Test::Unit::TestCase
     end
 
     should 'raise an ArgumentError' do
-      exception = assert_raise ArgumentError do
+      exception = assert_raises ArgumentError do
         Jekyll::Commands::New.process(@empty_args)
       end
       assert_equal 'You must specify a path.', exception.message

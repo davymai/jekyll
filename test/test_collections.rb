@@ -1,6 +1,6 @@
 require 'helper'
 
-class TestCollections < Test::Unit::TestCase
+class TestCollections < JekyllUnitTest
   context "an evil collection" do
     setup do
       @collection = Jekyll::Collection.new(fixture_site, "../../etc/password")
@@ -80,8 +80,9 @@ class TestCollections < Test::Unit::TestCase
       @site.process
     end
 
-    should "not contain any collections" do
-      assert_equal Hash.new, @site.collections
+    should "contain only the defaul collections" do
+      refute_equal Hash.new, @site.collections
+      refute_nil @site.collections
     end
   end
 
@@ -114,7 +115,7 @@ class TestCollections < Test::Unit::TestCase
 
     should "create a Hash on Site with the label mapped to the instance of the Collection" do
       assert @site.collections.is_a?(Hash)
-      assert_not_nil @site.collections["methods"]
+      refute_nil @site.collections["methods"]
       assert @site.collections["methods"].is_a? Jekyll::Collection
     end
 
@@ -122,7 +123,7 @@ class TestCollections < Test::Unit::TestCase
       assert @site.collections["methods"].docs.is_a? Array
       @site.collections["methods"].docs.each do |doc|
         assert doc.is_a? Jekyll::Document
-        assert_include %w[
+        assert_includes %w[
           _methods/configuration.md
           _methods/sanitized_path.md
           _methods/site/generate.md
@@ -135,16 +136,16 @@ class TestCollections < Test::Unit::TestCase
     end
 
     should "not include files which start with an underscore in the base collection directory" do
-      assert_not_include @collection.filtered_entries, "_do_not_read_me.md"
+      refute_includes @collection.filtered_entries, "_do_not_read_me.md"
     end
 
     should "not include files which start with an underscore in a subdirectory" do
-      assert_not_include @collection.filtered_entries, "site/_dont_include_me_either.md"
+      refute_includes @collection.filtered_entries, "site/_dont_include_me_either.md"
     end
 
     should "not include the underscored files in the list of docs" do
-      assert_not_include @collection.docs.map(&:relative_path), "_methods/_do_not_read_me.md"
-      assert_not_include @collection.docs.map(&:relative_path), "_methods/site/_dont_include_me_either.md"
+      refute_includes @collection.docs.map(&:relative_path), "_methods/_do_not_read_me.md"
+      refute_includes @collection.docs.map(&:relative_path), "_methods/site/_dont_include_me_either.md"
     end
   end
 
@@ -178,12 +179,12 @@ class TestCollections < Test::Unit::TestCase
     end
 
     should "not allow symlinks" do
-      assert_not_include @collection.filtered_entries, "um_hi.md"
-      assert_not_include @collection.filtered_entries, "/um_hi.md"
+      refute_includes @collection.filtered_entries, "um_hi.md"
+      refute_includes @collection.filtered_entries, "/um_hi.md"
     end
 
     should "not include the symlinked file in the list of docs" do
-      assert_not_include @collection.docs.map(&:relative_path), "_methods/um_hi.md"
+      refute_includes @collection.docs.map(&:relative_path), "_methods/um_hi.md"
     end
   end
 
@@ -198,11 +199,11 @@ class TestCollections < Test::Unit::TestCase
     end
 
     should "exist" do
-      assert_not_nil @collection
+      refute_nil @collection
     end
 
     should "contain one document" do
-      assert_equal 2, @collection.docs.size
+      assert_equal 3, @collection.docs.size
     end
 
     should "allow dots in the filename" do

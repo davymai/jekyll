@@ -2,7 +2,7 @@
 
 require 'helper'
 
-class TestFilters < Test::Unit::TestCase
+class TestFilters < JekyllUnitTest
   class JekyllFilter
     include Jekyll::Filters
     attr_accessor :site, :context
@@ -29,6 +29,34 @@ class TestFilters < Test::Unit::TestCase
 
     should "markdownify with simple string" do
       assert_equal "<p>something <strong>really</strong> simple</p>\n", @filter.markdownify("something **really** simple")
+    end
+
+    context "smartify filter" do
+      should "convert quotes and typographic characters" do
+        assert_equal "SmartyPants is *not* Markdown", @filter.smartify("SmartyPants is *not* Markdown")
+        assert_equal "“This filter’s test…”", @filter.smartify(%q{"This filter's test..."})
+      end
+
+      should "escapes special characters when configured to do so" do
+        kramdown = JekyllFilter.new({:kramdown => {:entity_output => :symbolic}})
+        assert_equal "&ldquo;This filter&rsquo;s test&hellip;&rdquo;", kramdown.smartify(%q{"This filter's test..."})
+      end
+
+      should "convert HTML entities to unicode characters" do
+        assert_equal "’", @filter.smartify("&rsquo;")
+        assert_equal "“", @filter.smartify("&ldquo;")
+      end
+
+      should "allow raw HTML passthrough" do
+        assert_equal "Span HTML is <em>not</em> escaped", @filter.smartify("Span HTML is <em>not</em> escaped")
+        assert_equal "<div>Block HTML is not escaped</div>", @filter.smartify("<div>Block HTML is not escaped</div>")
+      end
+
+      should "escape special characters" do
+        assert_equal "3 &lt; 4", @filter.smartify("3 < 4")
+        assert_equal "5 &gt; 4", @filter.smartify("5 > 4")
+        assert_equal "This &amp; that", @filter.smartify("This & that")
+      end
     end
 
     should "sassify with simple string" do
@@ -257,7 +285,7 @@ class TestFilters < Test::Unit::TestCase
             assert_equal 2, g["items"].size
           when ""
             assert g["items"].is_a?(Array), "The list of grouped items for '' is not an Array."
-            assert_equal 11, g["items"].size
+            assert_equal 12, g["items"].size
           end
         end
       end
@@ -277,9 +305,32 @@ class TestFilters < Test::Unit::TestCase
       should "filter objects appropriately" do
         assert_equal 2, @filter.where(@array_of_objects, "color", "red").length
       end
+
+      should "stringify during comparison for compatibility with liquid parsing" do
+        hash = {
+          "The Words" => {"rating" => 1.2, "featured" => false},
+          "Limitless" => {"rating" => 9.2, "featured" => true},
+          "Hustle"    => {"rating" => 4.7, "featured" => true},
+        }
+
+        results = @filter.where(hash, "featured", "true")
+        assert_equal 2, results.length
+        assert_equal 9.2, results[0]["rating"]
+        assert_equal 4.7, results[1]["rating"]
+
+        results = @filter.where(hash, "rating", 4.7)
+        assert_equal 1, results.length
+        assert_equal 4.7, results[0]["rating"]
+      end
     end
 
     context "sort filter" do
+      should "raise Exception when input is nil" do
+        err = assert_raises ArgumentError do
+          @filter.sort(nil)
+        end
+        assert_equal "Cannot sort a null object.", err.message
+      end
       should "return sorted numbers" do
         assert_equal [1, 2, 2.2, 3], @filter.sort([3, 2.2, 2, 1])
       end
@@ -362,6 +413,20 @@ class TestFilters < Test::Unit::TestCase
     context "unshift filter" do
       should "return a new array with the element put at the front" do
         assert_equal %w{aloha there bernie}, @filter.unshift(%w{there bernie}, "aloha")
+      end
+    end
+
+    context "sample filter" do
+      should "return a random item from the array" do
+        input = %w(hey there bernie)
+        assert_includes input, @filter.sample(input)
+      end
+
+      should "allow sampling of multiple values (n > 1)" do
+        input = %w(hey there bernie)
+        @filter.sample(input, 2).each do |val|
+          assert_includes input, val
+        end
       end
     end
 

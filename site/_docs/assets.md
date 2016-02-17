@@ -4,9 +4,10 @@ title: Assets
 permalink: /docs/assets/
 ---
 
-Jekyll provides built-in support for Sass and CoffeeScript. In order to use
-them, create a file with the proper extension name (one of `.sass`, `.scss`,
-or `.coffee`) and start the file with two lines of triple dashes, like this:
+Jekyll provides built-in support for Sass and can work with CoffeeScript via 
+a Ruby gem. In order to use them, you must first create a file with the 
+proper extension name (one of `.sass`, `.scss`, or `.coffee`) and start the 
+file with two lines of triple dashes, like this:
 
 {% highlight sass %}
 ---
@@ -73,8 +74,21 @@ You may also specify the output style with the `style` option in your
 
 {% highlight yaml %}
 sass:
-    style: :compressed
+    style: compressed
 {% endhighlight %}
 
 These are passed to Sass, so any output style options Sass supports are valid
 here, too.
+
+
+## Coffeescript
+
+To enable Coffeescript in Jekyll 3.0 and up you must
+
+* Install the `jekyll-coffeescript` gem
+* Ensure that your `_config.yml` is up-to-date and includes the following:
+
+{% highlight yaml %}
+gems:
+ - jekyll-coffeescript
+{% endhighlight %}
